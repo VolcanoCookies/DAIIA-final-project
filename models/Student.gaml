@@ -5,28 +5,67 @@
 * Tags: 
 */
 
-
 model Student
 
 import "House.gaml"
 import "Human.gaml"
 
-species Student skills: [moving] control: simple_bdi parent: Human {
+species Student skills: [moving] control: fsm parent: Human {
 	
-	init {
-		do add_desire(want_party);
-	}
-	
-	float speed <- 1.0#km/#h;
+	// Parameters
+	float speed <- 4.0#km/#h;
 	House party;
+	int age <- rnd(15, 25);
 	float likeability <- rnd(0.0, 1.0);
 	
-	predicate want_party <- new_predicate("want party");
-	predicate want_alcohol <- new_predicate("want alcohol");
-	predicate buy_alcohol <- new_predicate("buy alcohol");
-	predicate is_dancing <- new_predicate("is dancing");
+	float rotation <- 0.0;
+	float intoxication <- 0.0;
+	
+	bool at_party {
+		return party != nil and self intersects party;
+	}
+	
+	state idle initial: true {
+		
+		loop i over: informs {
+			if read(i) = "party starting" {
+				party <- House(i.sender);
+			}
+		}
+		
+		bool buy_alcohol <- flip(0.5);
+		
+		transition to: buy_alcohol when: buy_alcohol and party != nil;
+		transition to: attend_party when: !buy_alcohol and party != nil;
+		
+	}
+	
+	state buy_alcohol {
+		
+	}
+	
+	state attend_party {
+		
+		
+		transition to: party when: at_party();
+		
+	}
+	
+	state party {
+		
+	}
+
 	
 	
+	reflex when: intoxication > 0 {
+		do wander speed: min(intoxication, 1.0);
+	}
+	
+	aspect base {
+		
+		draw square(1.0) rotate: rotation color: #purple;
+		
+	}
 	
 }
 

@@ -31,6 +31,12 @@ species Base skills: [fipa] virtual: true {
 	
 	}
 	
+	bool debug <- false;
+	
+	user_command "Toggle Debugging" {
+		debug <- !debug;
+	}
+	
 	int internal_cycle <- cycle update: internal_cycle + 1;
 	
 	string last_state;
