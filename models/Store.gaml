@@ -11,13 +11,14 @@ model Store
 import "Student.gaml"
 import "Station.gaml"
 import "Base.gaml"
+import "Phrases.gaml"
 
 import "Neighbourhood.gaml"
 
 global {
 	
 	float SIZE const: true <- 10.0;
-	int legal_age <- 18 const: true;
+	int LEGAL_AGE <- 18 const: true;
 	
 	init {
 		create Store;
@@ -33,23 +34,23 @@ species Store skills: [fipa] parent: Base {
 		shape <- rectangle({10.0, 10.0});
 		
 	}
-	
-	list<Student> held <- [];
-	
+		
 	action buy_alcohol(Student student) {
 		
-		if student.age >= legal_age or flip(0.1) {
+		if student.traits.age >= LEGAL_AGE or flip(0.5 * student.traits.charisma) {
 			ask student {
-				do add_belief(alcohol);
+				alcohol <- rnd(1, 5);
 			}
 		} else {
-			do start_conversation to: list(Station) performative: "inform" protocol: "no-protocol" contents: ["underage buying alcohol", student.id];		
-			add student to: held;
+			do start_conversation to: list(Station) performative: "inform" protocol: "no-protocol" contents: [UNDERAGE_BUYING, student.id];		
+			
+			do log("Detained student X", [student]);
 			
 			ask student {
-				//do add_obligation(arrested); 
+				detained <- true;
 			}
 			
+			return 0;
 		}
 		
 	}
@@ -64,7 +65,7 @@ species Store skills: [fipa] parent: Base {
 	
 	aspect floor {
 		
-		draw shape color: #red;
+		draw shape color: #blue;
 		
 	}
 	

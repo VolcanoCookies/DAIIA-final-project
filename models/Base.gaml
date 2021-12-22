@@ -37,6 +37,16 @@ species Base skills: [fipa] virtual: true {
 		debug <- !debug;
 	}
 	
+	user_command "Toggle Logging" {
+		logs <- !logs;
+	}
+	
+	action clear_mail {
+		loop m over: mailbox {
+			
+		}
+	}
+	
 	int internal_cycle <- cycle update: internal_cycle + 1;
 	
 	string last_state;

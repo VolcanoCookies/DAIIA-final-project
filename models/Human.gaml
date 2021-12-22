@@ -10,11 +10,14 @@ model Human
 
 import "Base.gaml"
 
+import "Neighbourhood.gaml"
+
 species Human skills: [moving, fipa] parent: Base virtual: true {
 	
 	float reach <- 2.0;
 
 	unknown target <- nil;
+	geometry bounds <- world_plane;
 	point target_in_geometry <- nil;
 	
 	bool can_reach(unknown u) {
@@ -23,12 +26,17 @@ species Human skills: [moving, fipa] parent: Base virtual: true {
 		} else if u is point {
 			return (location distance_to point(u)) < reach;
 		} else if (u as agent) != nil {
-			return (location distance_to point(u)) < reach;
+			return (location distance_to agent(u).shape) < reach;
 		} else if u is geometry {
 			return (location intersects geometry(u));
 		} else {
 			return false;
 		}
+	}
+	
+	action set_target(unknown new_target, geometry new_bounds <- world_plane) {
+		target <- new_target;
+		bounds <- new_bounds;
 	}
 	
 	bool at_target {
@@ -39,7 +47,7 @@ species Human skills: [moving, fipa] parent: Base virtual: true {
 		if target is geometry and at_target() {
 			return geometry(target) inter host.world.shape;
 		} else {
-			return host.world.shape;
+			return bounds;
 		}
 	}
 	
@@ -48,14 +56,14 @@ species Human skills: [moving, fipa] parent: Base virtual: true {
 			if target_in_geometry = nil or !(target_in_geometry intersects geometry(target)){
 				target_in_geometry <- any_location_in(geometry(target));
 			}
-			do goto target: target_in_geometry;
+			do goto target: target_in_geometry on: bounds;
 		} else {
-			do goto target: target;	
+			do goto target: target on: bounds;	
 		}
 	}
 	
 	reflex separate {
-		list too_close <- peers at_distance 1.75;
+		list too_close <- (peers - target) at_distance 1.75;
 		if !empty(too_close) {
 			point center <- mean(too_close collect each.location) as point;
 			float angle <- location towards center;

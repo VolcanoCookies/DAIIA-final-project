@@ -10,6 +10,8 @@ model House
 
 import "Student.gaml"
 import "Base.gaml"
+import "Traits.gaml"
+import "Phrases.gaml"
 
 import "Neighbourhood.gaml"
 
@@ -25,11 +27,8 @@ global {
 		{70, 50},
 		{90, 50}
 	] const: true;
-	float SIZE const: true <- 8.0;
 	
-	init {
-		create House number: 8;
-	}
+	float SIZE const: true <- 8.0;
 	
 }
 
@@ -38,7 +37,7 @@ species House skills: [fipa] parent: Base control: fsm {
 	init {
 		
 		int index <- House index_of self;
-		int row <- index mod 2;
+		int row <- index div 4;
 			
 		//location <- {SIZE * 1.2 * (index - row + 1), 35.0 + 30.0 * row};
 		location <- locations at index;
@@ -48,23 +47,31 @@ species House skills: [fipa] parent: Base control: fsm {
 		
 		neighbours <- [];
 		
-		if index > 1 {
-			add House[index - 2] to: neighbours;
-		}
-		
-		if index < 6 {
-			add House[index + 2] to: neighbours;
-		}
-		
-		if row = 0 {
-			add House[index + 1] to: neighbours;
-		} else {
+		if index > 0 and index != 4 {
 			add House[index - 1] to: neighbours;
 		}
 		
+		if index < 7 and index != 3 {
+			add House[index + 1] to: neighbours;
+		}
+		
+		if row = 0 {
+			add House[index + 4] to: neighbours;
+		} else {
+			add House[index - 4] to: neighbours;
+		}
+	
+		capacity <- rnd(10, 50);
+	
+		create Traits returns: p;
+		preferences <- p[0];
+		
 	}
 	
+	int capacity;
 	int alcohol <- 0;
+	
+	Traits preferences;
 	
 	list<House> neighbours;
 	
@@ -91,34 +98,43 @@ species House skills: [fipa] parent: Base control: fsm {
 			color <- rgb(50, 255, 0);
 			
 			float leniancy <- rnd(0.0, 1.0);
-			list<Student> invite_list <- (list(Student) - trouble_makers) where (each.likeability > leniancy);
+			list<Student> invite_list <- (list(Student) - trouble_makers) where (preferences.perceive(each.traits) > leniancy);
+			
+			if length(invite_list) > capacity {
+				invite_list <- copy_between(invite_list, 0, capacity - 1);
+			}
 		
 			attendees <- [];
 			
 			alcohol <- rnd(0, 10);
 			
 			if !empty(invite_list) {
-				do start_conversation to: invite_list performative: "inform" protocol: "no-protocol"  contents: ["party starting"];
+				do log("Inviting X students to a party", [length(invite_list)]);
+				do start_conversation to: invite_list performative: "inform" protocol: "no-protocol" contents: [PARTY_INVITE];
 			}
 		}
 		
 		loop i over: informs {
-			
 			Student s <- Student(i.sender);
-			if invite_list contains s {
+			if invite_list contains s and read(i) = ATTENDING {
 				add s to: attendees;
 			}
-			
 		}
 		
-		transition to: idle when: empty(invite_list) {
+		transition to: idle when: empty(invite_list) or state_cycle > 20 {
+			if !empty(attendees) {
+				do start_conversation to: attendees performative: "inform" protocol: "no-protocol" contents: [PARTY_CANCELLED];
+			}
 			party_cooldown <- 200;
 		}
 		
-		transition to: hold_party when: state_cycle > 15;
+		// Only start a party if at least 30% of invited students said they will attend
+		transition to: hold_party when: state_cycle > 15 and length(attendees) > length(invite_list) * 0.3 {
+			do start_conversation to: attendees performative: "inform" protocol: "no-protocol" contents: [PARTY_STARTING];
+		}
 		
 	}
-	
+
 	state hold_party {
 		
 		enter {
@@ -149,19 +165,22 @@ species House skills: [fipa] parent: Base control: fsm {
 			}
 			
 			draw string("Cooldown: " + party_cooldown) color: #black;
-						
+			draw string("Alcohol: " + alcohol) color: #black at: location - {0, 1};
+			draw string("Capacity: " + capacity) color: #black at: location - {0, 2};
+			draw string("Attendees: " + length(Student inside plot)) color: #black at: location - {0, 3};
+				
 		}
 	}
 	
 	aspect floor {
 		
-		draw shape color: #red;
+		draw shape color: #green;
 		
 	}
 	
 	aspect plot {
 	
-		draw plot color: #green;
+		draw (plot - shape) color: #darkgreen;
 		
 	}
 	
