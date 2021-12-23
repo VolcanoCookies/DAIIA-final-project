@@ -10,7 +10,7 @@ model Human
 
 import "Base.gaml"
 
-import "Neighbourhood.gaml"
+import "Festival.gaml"
 
 species Human skills: [moving, fipa] parent: Base virtual: true {
 	
@@ -53,6 +53,10 @@ species Human skills: [moving, fipa] parent: Base virtual: true {
 	
 	bool at_target {
 		return target != nil and can_reach(target);
+	}
+	
+	bool at(geometry g) {
+		return self intersects g;
 	}
 	
 	geometry bounds { 
