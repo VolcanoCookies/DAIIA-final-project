@@ -25,6 +25,7 @@ species Student skills: [moving] control: fsm parent: Human {
 	// Parameters
 	float speed <- 4.0#km/#h;
 	House party;
+	bool party_ending <- false;
 
 	float intoxication <- 0.0 min: 0.0 update: intoxication - 0.05;
 	
@@ -77,6 +78,11 @@ species Student skills: [moving] control: fsm parent: Human {
 	state idle initial: true {
 		
 		enter {
+			do release();
+			rotation <- 0.0;
+			target <- nil;
+			party <- nil;
+			party_ending <- false;
 			House party_invite;
 		}
 		
@@ -85,6 +91,8 @@ species Student skills: [moving] control: fsm parent: Human {
 				if read(i) = PARTY_INVITE {
 					party_invite <- House(i.sender);
 					do inform message: i contents: [ATTENDING];
+					do happy(0.25);
+					
 					do log("Got invite to party at X", [House]);
 				}
 			} else {
@@ -127,6 +135,7 @@ species Student skills: [moving] control: fsm parent: Human {
 		}
 		
 		transition to: attend_party when: alcohol > 0;
+		transition to: idle when: party_ending;
 		transition to: arrested when: detained;
 
 	}
@@ -135,7 +144,7 @@ species Student skills: [moving] control: fsm parent: Human {
 		
 		enter {
 			speed <- 0.0;
-			do happy d: -0.5;
+			do happy d: -5.0;
 		}
 		
 		transition to: idle when: !detained;
@@ -149,26 +158,40 @@ species Student skills: [moving] control: fsm parent: Human {
 	state attend_party {
 		
 		enter {
-			do set_target(party, roads + party.shape + party.plot);
+			target <- party;
+			do confine(roads + party.plot);
 		}
 		
-		transition to: party when: at_target();
+		transition to: idle when: party_ending;
+		transition to: party when: at_target() {
+			ask party {
+				add myself to: guests;
+			}
+		}
 		
 	}
+	
+	Student talking_to;
 	
 	state party {
 		
 		enter {
+			do confine(party.plot);
+			
 			ask party {
 				alcohol <- alcohol + myself.alcohol;
 				myself.alcohol <- 0;
 			}
 		
-			do happy d: 0.35;
+			talking_to <- nil;
+		
+			do happy(1.0);
 		}
 		
 		rotation <- rotation + 10;
 		do wander speed: 0.25 bounds: party.shape + party.plot;
+		
+		do happy(0.01);
 		
 		if flip(0.01) {
 			ask party {
@@ -179,12 +202,70 @@ species Student skills: [moving] control: fsm parent: Human {
 			}
 		}
 		
+		if flip(0.02) {
+			Student g <- any((party.guests - self) at_distance 7.5);
+			
+			if g != nil and g.state = "party" and g.talking_to = nil {
+				g.talking_to <- self;
+				talking_to <- g;
+			}
+		}
+		
+		transition to: talking when: talking_to != nil;
+
+		transition to: idle when: party_ending or party.state != "hold_party";
+		
+	}
+	
+	state talking {
+		
+		enter {
+			target <- talking_to;
+		
+			do log("Talking to X", [talking_to]);
+		
+			float opinion <- 0.0;
+			float mod <- perceive(talking_to);
+		}
+		
+		if state_cycle mod 2 = 0 {
+			if rnd(0.0, 1.0) * mod > 0.5 {
+				opinion <- opinion + 0.1;
+			} else {
+				opinion <- opinion - 0.1;
+			}
+		}
+		
+		exit {
+			do change_bias(talking_to, opinion);
+			
+			if opinion > 0 {
+				do happy(0.25);
+			} else {
+				do happy(-0.25);
+			}
+			
+			target <- nil;
+			talking_to <- nil;
+		}
+		
+		transition to: party when: talking_to = nil or state_cycle > 20;
+		
 	}
 
-	
-	
 	reflex when: intoxication > 0 {
 		do wander speed: min(intoxication, 1.0);
+	}
+	
+	aspect debug {
+		if enable_debugging and debug {
+			if talking_to != nil {
+				draw self link talking_to color: #red;
+			}
+			if party != nil {
+				draw self link party color: #blue;
+			}
+		}
 	}
 	
 	aspect base {

@@ -34,6 +34,18 @@ species Human skills: [moving, fipa] parent: Base virtual: true {
 		}
 	}
 	
+	action confine(geometry g) {
+		bounds <- g;
+	}
+	
+	action release {
+		bounds <- world_plane;
+	}
+	
+	reflex move_to_bounds when: !(self intersects bounds) {
+		do goto target: bounds speed: 2#km/#h;
+	}
+	
 	action set_target(unknown new_target, geometry new_bounds <- world_plane) {
 		target <- new_target;
 		bounds <- new_bounds;

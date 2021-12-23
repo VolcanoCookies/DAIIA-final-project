@@ -102,7 +102,7 @@ species Base skills: [fipa] virtual: true {
 			}
 		}
 		
-		write "[" + to_string() + "] : " + m;  
+		write to_string() + "\t| " + m color: #black;  
 	}
 	
 	string to_string {

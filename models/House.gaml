@@ -79,6 +79,7 @@ species House skills: [fipa] parent: Base control: fsm {
 	list<Student> trouble_makers <- [];
 	
 	list<Student> attendees;
+	list<Student> guests;
 	
 	int party_cooldown <- rnd(25, 250) min: 0 update: party_cooldown - 1;
 	
@@ -86,6 +87,15 @@ species House skills: [fipa] parent: Base control: fsm {
 		
 		enter {
 			color <- rgb(0, 255, 0);
+			
+			attendees <- [];
+			guests <- [];
+		}
+		
+		loop n over: neighbours {
+			if n.state = "hold_party" and flip(0.001) {
+				do start_conversation to: list(Station) performative: "inform" protocol: "no-protocol" contents: [LOUD_PARTY, n.id];
+			}
 		}
 		
 		transition to: start_party when: party_cooldown = 0 and flip(0.01);
@@ -103,8 +113,6 @@ species House skills: [fipa] parent: Base control: fsm {
 			if length(invite_list) > capacity {
 				invite_list <- copy_between(invite_list, 0, capacity - 1);
 			}
-		
-			attendees <- [];
 			
 			alcohol <- rnd(0, 10);
 			
@@ -149,6 +157,14 @@ species House skills: [fipa] parent: Base control: fsm {
 		
 		enter {
 			color <- rgb(100, 100, 100);
+		}
+		
+		loop g over: guests {
+			ask g {
+				if party = myself {
+					party_ending <- true;
+				}
+			}
 		}
 		
 		transition to: idle when: state_cycle > 15 {

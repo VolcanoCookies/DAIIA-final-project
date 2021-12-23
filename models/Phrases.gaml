@@ -17,5 +17,7 @@ global {
 	string PARTY_CANCELLED <- "party cancelled";
 	string PARTY_STARTING <- "party starting";
 	string ATTENDING <- "attending";
+	string LOUD_PARTY <- "loud party";
+	string CRASH_PARTY <- "crash party";
 	
 }

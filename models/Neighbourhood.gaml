@@ -21,8 +21,6 @@ global {
 	geometry world_plane;
 	geometry roads;
 	
-	float global_happiness <- 0.0 update: list(Student) sum_of each.happiness;
-	
 	init {
 		
 		create Student number: 100;
@@ -40,6 +38,12 @@ global {
 		
 	}
 	
+	list<Student> happiest <- [];
+	
+	reflex when: cycle mod 5 = 0 {
+		happiest <- copy_between(list(Student) sort_by -each.happiness, 0, 10);
+	}
+	
 }
 
 experiment Neighbourhood {
@@ -51,7 +55,7 @@ experiment Neighbourhood {
 	
 	output {
 		
-		monitor "Global Happiness" value: global_happiness;
+		monitor "Global Happiness" value: list(Student) sum_of each.happiness;
 		
 		display Neighbourhood type: opengl background: #white {
 			
@@ -66,6 +70,7 @@ experiment Neighbourhood {
 			species Station aspect: debug;
 			species Station aspect: floor;
 			
+			species Student aspect: debug;
 			species Student aspect: base;
 			
 			species Cop aspect: base;
@@ -84,6 +89,12 @@ experiment Neighbourhood {
 				}
 			}
 			
+		}
+		
+		display Graphs {
+			chart "Happiness" type: histogram {
+				datalist happiest value: happiest collect each.happiness;
+			}
 		}
 		
 	}

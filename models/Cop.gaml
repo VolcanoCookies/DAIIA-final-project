@@ -15,11 +15,13 @@ import "Human.gaml"
 species Cop skills: [moving] control: fsm parent: Human {
 	
 	Student arrest;
+	House crash;
 
 	state idle initial: true {
 		
 		enter {
 			arrest <- nil;
+			crash <- nil;
 			target <- nil;
 			do clear_mail();
 		}
@@ -34,11 +36,17 @@ species Cop skills: [moving] control: fsm parent: Human {
 				}
 				match DETAIN {
 					arrest <- Student(read_agent(i, 1));
+					do log("Going to arrest X", [arrest]);
+				}
+				match CRASH_PARTY {
+					crash <- House(read_agent(i, 1));
+					do log("Going to crash party at X", [crash]);
 				}
 			}
 		}
 		
 		transition to: detain when: arrest != nil;
+		transition to: crash when: crash != nil;
 		
 	}
 	
@@ -49,6 +57,27 @@ species Cop skills: [moving] control: fsm parent: Human {
 		}
 		
 		transition to: escort when: at_target();
+		
+	}
+	
+	state crash {
+		
+		enter {
+			target <- crash;
+		}
+		
+		transition to: idle when: at_target() {
+			ask crash {
+				if state = "hold_party" {
+					state_cycle <- 99999999;
+					loop g over: guests {
+						ask g {
+							do happy(-5.0);
+						}
+					}
+				}
+			}
+		}
 		
 	}
 	
