@@ -65,6 +65,14 @@ species Drinker parent: Guest {
 		alcohol_desire <- alcohol_desire - int(alcohol * 5);
 	}
 
+	bool buy_drink (Drinker for) {
+		return generosity > 0.8;
+	}
+
+	bool agree_throw_out {
+		return intoxication < 2.0 and flip(0.3);
+	}
+
 	aspect debug {
 		if enable_debugging and debug {
 		}

@@ -13,7 +13,7 @@ species Extrovert parent: Guest {
 		color <- #red;
 	}
 
-	bool buy_alcohol (Drinker for) {
+	bool buy_drink (Drinker for) {
 		return generosity > 0.9 or (perceive(for) > 0.75 and generosity > 0.6);
 	}
 
@@ -87,7 +87,7 @@ species Extrovert parent: Guest {
 	state dance {
 		enter {
 			do release();
-			dance_partner <- nil;
+			other <- nil;
 		}
 		// Dance
 		rotation <- rotation + 10.0;
@@ -102,21 +102,21 @@ species Extrovert parent: Guest {
 		}
 
 		transition to: asking_to_dance when: flip(0.02);
-		transition to: asking_to_dance when: dance_partner != nil;
+		transition to: asking_to_dance when: other != nil;
 	}
 
 	state asking_to_dance {
 		enter {
 			Guest partner <- any((Guest - self) at_distance 7.5);
 			if partner != nil {
-				do start_conversation to: list(dance_partner) performative: "request" protocol: "no-protocol" contents: [DANCE_REQUEST];
+				do start_conversation to: list(other) performative: "request" protocol: "no-protocol" contents: [DANCE_REQUEST];
 			}
 
 		}
 
 		loop a over: agrees {
 			if a.sender = partner {
-				dance_partner <- partner;
+				other <- partner;
 				do happy(0.1);
 			}
 
@@ -130,28 +130,25 @@ species Extrovert parent: Guest {
 		}
 
 		transition to: dance when: partner = nil;
-		transition to: dance_together when: dance_partner != nil or state_cycle > 15;
+		transition to: dance_together when: other != nil or state_cycle > 15;
 	}
 
 	state dance_together {
 		enter {
-			target <- dance_partner;
+			target <- other;
 		}
 
-		if state_cycle mod 10 = 0 {
-			if dance_partner is Dancer {
-				do happy(0.5);
+		transition to: dance when: other = nil or flip(0.01) {
+			ask other {
+				other <- nil;
 			}
 
 		}
 
-		transition to: dance when: dance_partner = nil or flip(0.01) {
-			ask dance_partner as Dancer {
-				dance_partner <- nil;
-			}
+	}
 
-		}
-
+	bool agree_throw_out {
+		return false;
 	}
 
 	aspect debug {

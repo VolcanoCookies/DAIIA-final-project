@@ -43,6 +43,10 @@ species Introvert parent: Guest {
 
 	}
 
+	bool agree_throw_out {
+		return true;
+	}
+
 	aspect debug {
 		if enable_debugging and debug {
 		}

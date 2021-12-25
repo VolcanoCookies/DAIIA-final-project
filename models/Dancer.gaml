@@ -15,6 +15,7 @@ species Dancer parent: Guest {
 		color <- #yellow;
 	}
 
+	list danced_with <- [];
 	state idle initial: true {
 		enter {
 			do release();
@@ -82,6 +83,10 @@ species Dancer parent: Guest {
 	}
 
 	state dance_together {
+		enter {
+			add other to: danced_with;
+		}
+
 		if state_cycle mod 10 = 0 {
 			if other is Dancer {
 			// Extra happy when their dance partner is another dancer
@@ -99,6 +104,10 @@ species Dancer parent: Guest {
 			other <- nil;
 		}
 
+	}
+
+	bool buy_drink (Drinker for) {
+		return danced_with contains for;
 	}
 
 	state drink {

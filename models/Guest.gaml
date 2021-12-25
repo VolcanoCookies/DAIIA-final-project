@@ -56,6 +56,7 @@ species Guest skills: [moving] control: fsm parent: Human {
 	// State variables
 	Guest other;
 	bool buy_drink (Drinker for) virtual: true;
+	bool agree_throw_out virtual: true;
 
 	// Drink alcohol
 	action drink (float alcohol) {

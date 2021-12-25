@@ -18,6 +18,7 @@ species Introvert parent: Guest {
 			do release();
 			rotation <- 0.0;
 			target <- nil;
+			other <- nil;
 		}
 
 		do wander;
@@ -30,7 +31,6 @@ species Introvert parent: Guest {
 			target <- any(patrol_places);
 		}
 
-		transition to: patrol_roads when: at_target() and target = roads;
 		transition to: patrol_bar when: at_target() and target = bar;
 		transition to: patrol_dance_floor when: at_target() and target = dance_floor;
 		transition to: patrol_cafe when: at_target() and target = cafe;
@@ -41,19 +41,50 @@ species Introvert parent: Guest {
 
 	}
 
-	state patrol_roads {
-		do wander;
-	}
-
-	state patrol_bar {
+	state throw_out {
 		enter {
-			target <- bar;
+			target <- other;
+			bool chase <- false;
 		}
 
-		if at(bar) and target = bar {
+		if at(other) {
+			if other.agree_throw_out() {
+			// Tell the guest to leave
+				ask other {
+					target <- roads;
+					do happy(-0.5);
+				}
+
+				target <- nil;
+			} else {
+				chase <- true;
+			}
+
+		}
+
+		if not (other.at(bounds)) {
 			target <- nil;
 		}
 
+		transition to: chase when: chase;
+		transition to: idle when: target = nil;
+	}
+
+	state chase {
+		enter {
+			target <- other;
+			do release();
+		}
+
+		if at(other) {
+		// Beat em or something
+			target <- nil;
+		}
+
+		transition to: idle when: target = nil;
+	}
+
+	state patrol_bar {
 		if state_cycle mod 5 = 0 {
 			list drinkers <- (Drinker at_distance 7.5) inside bar;
 			drinkers <- drinkers sort_by -each.intoxication;
@@ -65,10 +96,13 @@ species Introvert parent: Guest {
 		}
 
 		do wander;
-		transition to: throw_out when: other != nil;
+		transition to: idle when: flip(0.01);
 	}
 
 	state patrol_dance_floor {
+		if state_cycle mod 5 = 0 {
+		}
+
 	}
 
 	state patrol_cafe {
@@ -80,6 +114,14 @@ species Introvert parent: Guest {
 			patrol_area <- any([bar, dance_floor, cafe, world_plane]);
 		}
 
+	}
+
+	bool buy_drink (Drinker for) {
+		return false;
+	}
+
+	bool agree_throw_out {
+		return false;
 	}
 
 	aspect debug {
