@@ -8,13 +8,20 @@ If it reaches a threshold they will go to the bar to get more alcohol if not alr
 
 At the bar they can either buy alcohol for themselves if sufficiently wealthy, or ask others to buy them alcohol.
 
-[[Security]] will throw them out of the bar if asked for alcohol.
-[[Extrovert]] have a high chance of buying them alcohol, if sufficiently generous.
-[[Introvert]] will never buy them alcohol, and will try to avoid them.
-[[Dancer]] will only buy them alcohol if they have danced with them before.
-[[Drinker]] will never buy other drinkers alcohol, they want all the alcohol for themselves.
+---
+### [[Extrovert]]
+Will ask them to buy them drinks if they arent sufficiently wealthy, or if they find a generous enough extrovert.
 
-A guest who is a teetotaler will never buy a [[Drinker]] alcohol.
-Drinkers cannot be teetotalers.
+### [[Drinker]]
+Will start fights with other drinkers at the bar if both are sufficiently intoxicated.
+If only one drinker is sufficiently intoxicated, the other drinker will call on [[Security]] to help them.
+When seeing 2 drinkers fight, an [[Introvert]] can call security if they see two [[Drinker]]s fighting.
 
-Can start fights with other [[Drinker]] when both are sufficiently drunk, both will be kicked out by security if seen fighting.
+### [[Introvert]]
+???
+
+### [[Security]]
+Will avoid them when at the bar. Can get throw out by them if caught fighting or simply too intoxicated.
+
+### [[Dancer]]
+???

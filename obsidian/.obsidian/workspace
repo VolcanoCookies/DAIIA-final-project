@@ -1,0 +1,97 @@
+{
+  "main": {
+    "id": "b497de79c071a9d4",
+    "type": "split",
+    "children": [
+      {
+        "id": "0a69b3b6f7981f8b",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "Dancer.md",
+            "mode": "source",
+            "source": false
+          }
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "a73c12f0da2b9ce5",
+    "type": "split",
+    "children": [
+      {
+        "id": "aa046ee5f8d240d6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "cd62f48cd106d6fa",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "4dfda389a6c54b28",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "3a239593579f7f78",
+    "type": "split",
+    "children": [
+      {
+        "id": "a6a84a3d6d175123",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0015b7b407c0b8e7",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Dancer.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "0a69b3b6f7981f8b",
+  "lastOpenFiles": [
+    "Dancer.md",
+    "Drinker.md",
+    "Extrovert.md",
+    "Introvert.md"
+  ]
+}

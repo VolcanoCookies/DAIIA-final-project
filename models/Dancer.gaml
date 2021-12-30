@@ -24,62 +24,97 @@ species Dancer parent: Guest {
 		}
 
 		do wander;
+		transition to: dance when: chance(25);
+		transition to: drink when: chance(50);
 	}
 
+	int complain_cooldown <- 0 min: 0 update: complain_cooldown - 1;
 	state dance {
 		enter {
-			bounds <- dance_floor;
+			do confine(dance_floor);
+			other <- nil;
+			target <- nil;
 		}
 
 		// Dance
 		rotation <- rotation + 10.0;
 		do wander speed: 0.25;
 
-		// Accept any dance requests
+		// Avoid drinkers
+		list too_close <- Drinker at_distance 5.0;
+		if !empty(too_close) {
+			point center <- mean(too_close collect each.location);
+			do goto target: center speed: -0.5 on: bounds;
+		}
+
+		// Complain about others being too intoxicated
+		if complain_cooldown = 0 {
+			list perceived <- (Guest - self) at_distance 7.5;
+			Guest top <- perceived with_max_of each.intoxication;
+			if top.intoxication > 2.0 {
+			// TODO Call security
+				complain_cooldown <- 25;
+			}
+
+		}
+
+		// Accept dance requests from extroverts
 		loop r over: requests {
 			switch read(r) {
 				match DANCE_REQUEST {
-					do agree message: r contents: [DANCE_REQUEST];
+					Extrovert e <- r.sender as Extrovert;
+					// Only accept if their perception of the extrovert is high enough
+					if perceive(e) > 0.75 {
+						do agree message: r contents: [DANCE_REQUEST];
+					} else {
+						do refuse message: r contents: [DANCE_REQUEST];
+					}
+
 				}
 
 			}
 
 		}
 
+		// Move towards the center of the dance floor
+		do goto target: dance_floor on: dance_floor speed: 0.5;
+		// Repel from dancers that are too close
+		list dancers <- peers at_distance 3.0;
+		if !empty(dancers) {
+			point center <- mean(dancers collect each.location);
+			do goto target: center speed: -0.75 on: dance_floor;
+		}
+
 		transition to: dance_together when: other != nil;
-		transition to: asking_to_dance when: flip(0.02);
+		transition to: ask_to_dance_floor when: chance(50);
 	}
 
-	state asking_to_dance {
+	state ask_to_dance_floor {
 		enter {
-			target <- nil;
-			other <- any((Guest - self) at_distance 7.5);
+			other <- any(Introvert where each.at(dance_floor));
 			if other != nil {
-				do start_conversation to: list(other) performative: "request" protocol: "no-protocol" contents: [DANCE_REQUEST];
+				do start_conversation to: list(other) performative: "request" protocol: "no-protocol" contents: [DANCE_FLOOR_INVITE];
 			}
 
 		}
 
 		loop a over: agrees {
-			if a.sender = other {
-			// Happy if person agrees to dance request
+			if a.sender = other and read(a) = DANCE_FLOOR_INVITE {
+				other <- nil;
 				do happy(0.25);
-				target <- other;
 			}
 
 		}
 
 		loop r over: refuses {
-			if r.sender = other {
-			// Sad if guest denies dance request
-				do happy(-0.25);
+			if r.sender = other and read(r) = DANCE_FLOOR_INVITE {
 				other <- nil;
+				do happy(-0.25);
 			}
 
 		}
 
-		transition to: dance when: state_cycle > 15 or other = nil;
-		transition to: dance_together when: other != nil and target = other;
+		transition to: dance when: other = nil or state_cycle > 15;
 	}
 
 	state dance_together {
@@ -87,16 +122,13 @@ species Dancer parent: Guest {
 			add other to: danced_with;
 		}
 
-		if state_cycle mod 10 = 0 {
-			if other is Dancer {
-			// Extra happy when their dance partner is another dancer
-				do happy(0.5);
-			}
-
+		if frequency(10) {
+		// Happy when dancing
+			do happy(0.1);
 		}
 
 		// Stop dancing together
-		transition to: dance when: other = nil or flip(0.01) {
+		transition to: dance when: other = nil or chance(100) {
 			ask other {
 				other <- nil;
 			}
@@ -106,22 +138,29 @@ species Dancer parent: Guest {
 
 	}
 
-	bool buy_drink (Drinker for) {
-		return danced_with contains for;
-	}
-
 	state drink {
 		enter {
-			target <- bar;
-			do confine(bar);
+			if teetotaler {
+				target <- bar;
+			} else {
+				target <- cafe;
+			}
+
+			do confine(target);
 		}
 
 		if flip(0.05 * wealth) {
 		// Buy a drink for self
-			intoxication <- intoxication + 1.0;
+			if teetotaler {
+			// Drink non-alcoholic
+				do happy(1.0);
+			} else {
+				do drink(1.0);
+			}
+
 		}
 
-		transition to: idle when: flip(0.01);
+		transition to: idle when: chance(100);
 	}
 
 	aspect debug {

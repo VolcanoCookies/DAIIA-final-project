@@ -15,11 +15,15 @@ import "Introvert.gaml"
 import "Festival.gaml"
 species Guest skills: [moving] control: fsm parent: Human {
 
-// Parameters
+// Debgging
+	bool draw_perception_range <- false;
+
+	// Parameters
 	float speed <- 4.0 #km / #h;
 	float intoxication <- 0.0 min: 0.0 update: intoxication - 0.01;
 	float happiness <- 0.0;
 	float rotation <- 0.0;
+	float perception_range <- 7.5;
 
 	// Traits of this guest
 	int age min: 15 max: 25 init: rnd(15, 25);
@@ -31,13 +35,12 @@ species Guest skills: [moving] control: fsm parent: Human {
 	bool teetotaler <- flip(0.5);
 	map<Guest, float> opinions <- [];
 	float perceive (Guest guest) {
-		float opinion <- guest.looks + guest.personality;
-		opinion <- opinion - (age - guest.age);
+		float opinion <- mean(looks, personality, charisma, abs(age - guest.age) / 10.0);
 		if opinions[guest] != nil {
 			opinion <- opinion * opinions[guest];
 		}
 
-		return opinion;
+		return min(1.0, opinion);
 	}
 
 	action opinion (Guest guest, float delta) {
@@ -55,14 +58,14 @@ species Guest skills: [moving] control: fsm parent: Human {
 
 	// State variables
 	Guest other;
-	bool buy_drink (Drinker for) virtual: true;
-	bool agree_throw_out virtual: true;
 
 	// Drink alcohol
 	action drink (float alcohol) {
 		intoxication <- intoxication + alcohol;
 		if teetotaler {
 			do happy(-10.0);
+		} else {
+			do happy(alcohol * 0.5);
 		}
 
 	}
@@ -76,6 +79,14 @@ species Guest skills: [moving] control: fsm parent: Human {
 		if enable_debugging and debug {
 			if other != nil {
 				draw self link other color: #blue;
+			}
+
+			if target != nil {
+				draw self link point(target) color: #red;
+			}
+
+			if draw_perception_range {
+				draw circle(7.5) color: #red empty: true;
 			}
 
 		}

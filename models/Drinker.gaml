@@ -21,29 +21,36 @@ species Drinker parent: Guest {
 			do release();
 			rotation <- 0.0;
 			target <- nil;
+			other <- nil;
 		}
 
 		do wander;
-		transition to: drink when: alcohol_desire = 100;
+
+		// Avoid the cafe
+		if at(cafe) {
+			do goto target: cafe speed: -0.5;
+		}
+
+		transition to: dance when: chance(50);
+		transition to: drink when: alcohol_desire = 100 or chance(25);
 	}
 
 	state drink {
 		enter {
-			target <- bar;
-		}
-
-		if at(bar) {
 			do confine(bar);
 		}
 
-		if wealth > 0.5 and flip(0.1) {
+		if wealth > 0.5 and chance(10) {
 		// Buy themselves a drink
-			do drink(0.25);
+			do drink(0.5);
+		} else if chance(5) {
+		// Ask an extrovert to buy them a drink
+			other <- any(Extrovert inside bar);
 		}
 
-		if alcohol_desire = 100 and state_cycle > 100 and flip(0.25) {
+		if alcohol_desire = 100 and state_cycle > 100 and chance(4) {
 		// Ask someone to buy them a drink
-			Guest other <- any((Guest - self) inside bar);
+			other <- any((Guest - self) inside bar);
 			if other.buy_drink(self) {
 			// Someone bought them a drink
 				do drink(0.5);
@@ -56,21 +63,45 @@ species Drinker parent: Guest {
 			// Break stuff or start a fight idk
 		}
 
+		transition to: ask_for_drink when: other != nil;
 		transition to: idle when: at(roads) and target = roads;
 		transition to: idle when: alcohol_desire < 100 and flip(0.1);
 	}
 
+	state ask_for_drink {
+		enter {
+			target <- other;
+		}
+
+		ask other {
+			if !at(bar) {
+				myself.other <- nil;
+			}
+
+		}
+
+		transition to: drink when: other = nil;
+	}
+
+	state dance {
+		enter {
+			do confine(dance_floor);
+		}
+
+		// Dance
+		rotation <- rotation + 10.0;
+		do wander speed: 0.25;
+		if intoxication > 2.0 {
+			do goto target: Dancer closest_to self speed: 0.75 on: bounds;
+		}
+
+		transition to: idle when: state_cycle > 50 and chance(100);
+	}
+
 	action drink (float alcohol) {
 		intoxication <- intoxication + alcohol;
+		do happy(alcohol * 0.75);
 		alcohol_desire <- alcohol_desire - int(alcohol * 5);
-	}
-
-	bool buy_drink (Drinker for) {
-		return generosity > 0.8;
-	}
-
-	bool agree_throw_out {
-		return intoxication < 2.0 and flip(0.3);
 	}
 
 	aspect debug {
